@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+</head>
+<body>
+
+<div class="container mt-3">
+    <div>
+        <div class="input-group">
+            <input type="text" class="form-control input-lg me-2" id="query" name="query" placeholder="">
+
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="jobFunctionsDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    Job functions
+                </button>
+                <ul id="jobFunctionsDropdownMenu" class="dropdown-menu" aria-labelledby="multiSelectDropdown">
+                    <li class="dropdown-item" th:each="jobFunction : ${jobFunctions}">
+                        <label>
+                            <input type="checkbox" th:text="${jobFunction}" th:value="${jobFunction}">
+                        </label>
+                    </li>
+                </ul>
+            </div>
+
+            <button class="btn btn-primary ms-2" onclick="onSearchBtnClick()">Search</button>
+        </div>
+
+        <div id="results" class="mt-2">
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script>
+	const $queryInput = $("#query");
+	const $jobFunctionsDropdownMenu = $("#jobFunctionsDropdownMenu");
+	const $results = $("#results");
+
+	function onSearchBtnClick() {
+		const query = $queryInput.val();
+		const selectedJobFunctions = $jobFunctionsDropdownMenu.find("input:checked").map((index, checkbox) => checkbox.value).get().join();
+
+		$results.empty();
+		$.ajax({
+			method: 'GET',
+			url: "/search",
+			cache: false,
+			data: {
+				query: query,
+				jobFunctions: selectedJobFunctions,
+			}
+		}).done(jobs => {
+			jobs.map(job => {
+				const $card = $("<div>", {class: "card mb-2"});
+
+				const $cardBody = $("<div>", {class: "card-body"});
+				const $img = $("<img>", {src: job.logoUrl, style: "width: 50px;"});
+				const $jobTitle = $("<h2>", {class: "card-title", text: job.positionName});
+				const $organizationTitle = $("<h4>", {class: "card-title", text: job.organizationTitle});
+				const $location = $("<p>", {class: "card-text", text: job.location});
+				const $tags = $("<p>", {class: "card-text", text: job.tags});
+				const $jobUrl = $("<a>", {class: "btn btn-primary", href: job.jobUrl, text: "Read more"});
+
+				$cardBody.append($img, $jobTitle, $organizationTitle, $location, $tags, $jobUrl);
+
+				$card.append($cardBody);
+
+				$results.append($card);
+			})
+		})
+
+	}
+</script>
+</body>
+</html>
